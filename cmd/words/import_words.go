@@ -1,0 +1,3 @@
+package words
+
+func Start() {}

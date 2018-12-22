@@ -1,0 +1,3 @@
+package idioms
+
+func Start() {}

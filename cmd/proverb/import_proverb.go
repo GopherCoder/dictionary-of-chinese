@@ -1,0 +1,3 @@
+package proverb
+
+func Start() {}
