@@ -1,8 +1,9 @@
 package cmd
 
 import (
+	"dictionary-of-chinese/pkg/db"
+	"dictionary-of-chinese/router"
 	"fmt"
-	"holiday/router"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,8 @@ const (
 var rootCmd = &cobra.Command{
 	Use: Project,
 	Run: func(cmd *cobra.Command, args []string) {
+		db.Start()
+		defer db.DB.Close()
 		routers := router.Router{}
 		g := gin.Default()
 		routers.InitRouter(g)
