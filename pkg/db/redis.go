@@ -9,11 +9,15 @@ import (
 
 var DB redis.Conn
 
-func InitRedis() {
+func initRedis() {
 	port := viper.Get("redis.port")
 	con, err := redis.Dial("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		panic("can not connect to redis")
 	}
 	DB = con
+}
+
+func Start() {
+	initRedis()
 }
