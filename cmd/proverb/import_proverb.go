@@ -32,8 +32,10 @@ func init() {
 }
 
 func Start() {
+	db.Start()
 	fetchDataRootPage()
 	fetchDataPerPage()
+	defer db.DB.Close()
 }
 
 // 格式化
@@ -69,6 +71,7 @@ func fetchDataRootPage() bool {
 		return false
 	}
 
+	//fmt.Println(results)
 	// proverb:ids : string , incr
 	// proverb:hash HMSET
 	successImportHashPage(results)
@@ -77,11 +80,12 @@ func fetchDataRootPage() bool {
 
 // page: per page except one
 func fetchDataPerPage() bool {
-	for p := 2; p < proverbParams.TotalPage; p++ {
+	for p := 2; p <= proverbParams.TotalPage; p++ {
 		url := urlFormat(p)
 		response, _ := helper.DownloadHtml(url)
 		responseString := string([]byte(response))
 		results := commonFetch(responseString)
+		//fmt.Println(results)
 		successImportHashPage(results)
 	}
 	return true
@@ -115,15 +119,27 @@ func count() (int, error) {
 	if ok, _ := redis.Bool(db.DB.Do("EXISTS", proverbParams.ProverbIDs)); !ok {
 		c, err = redis.Int(db.DB.Do("SET", proverbParams.ProverbIDs, 0))
 	} else {
-		c, err = redis.Int(db.DB.Do("INCR", proverbParams.ProverbIDs, 1))
+		c, err = redis.Int(db.DB.Do("INCR", proverbParams.ProverbIDs))
 	}
 	return c, err
 }
 
 // proverb:hash HMSET by one model.Proverb
 func successImportHash(id int, result *model.Proverb) bool {
+	var hash struct {
+		ID     string `json:"id"`
+		Riddle string `json:"riddle"`
+		Answer string `json:"answer"`
+	}
 	result.ID = strconv.Itoa(id)
-	if _, err := db.DB.Do("HMSET", redis.Args{}.Add(proverbParams.ProverbHash).AddFlat(&result)); err != nil {
+	if ok, _ := redis.Bool(db.DB.Do("HEXISTS", proverbParams.ProverbHash, id)); ok {
+		return true
+	}
+	fmt.Println(result)
+	hash.ID = result.ID
+	hash.Riddle = result.Riddle
+	hash.Answer = result.Answer
+	if _, err := db.DB.Do("HMSET", redis.Args{}.Add(fmt.Sprintf(proverbParams.ProverbHash+":%d", id)).AddFlat(&hash)...); err != nil {
 		fmt.Println(err)
 		return false
 	}

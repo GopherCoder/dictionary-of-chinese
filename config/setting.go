@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitSetting() {
+func initSetting() {
 	viper.SetConfigName("settings")
 	viper.AddConfigPath("$GOPATH/src/dictionary-of-chinese")
 	viper.SetConfigType("yaml")
@@ -14,4 +14,8 @@ func InitSetting() {
 	if err != nil { // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
+}
+
+func init() {
+	initSetting()
 }

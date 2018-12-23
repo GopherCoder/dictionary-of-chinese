@@ -17,3 +17,16 @@ func TestStringHandler(t *testing.T) {
 		fmt.Println(StringHandler(t.value))
 	}
 }
+
+func TestRegexHandler(t *testing.T) {
+	tt := []struct {
+		value string
+	}{
+		{
+			value: "index_198.htm",
+		},
+	}
+	for _, t := range tt {
+		fmt.Println(RegexHandler(t.value))
+	}
+}
