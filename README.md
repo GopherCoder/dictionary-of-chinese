@@ -33,8 +33,8 @@
 > API
 
 ```
-GET /v1/api/proverb/:key // 根据 key 搜索
-GET /v1/api/proverb/:id // 根据 id 搜索
+GET /v1/api/proverb/keys/:key // 根据 key 搜索
+GET /v1/api/proverb/ids/:id // 根据 id 搜索
 GET /v1/api/proverb/samples?number=10&name=hjd  // 随机获取
 ```
 
@@ -55,8 +55,8 @@ GET /v1/api/proverb/samples?number=10&name=hjd  // 随机获取
 > API
 
 ```
-GET /v1/api/words/:name
-GET /v1/api/words/:id
+GET /v1/api/words/names/:name
+GET /v1/api/words/ids/:id
 GET /v1/api/words/samples?number=5&name=jdah
 ```
 
@@ -92,8 +92,8 @@ GET /v1/api/words/samples?number=5&name=jdah
 > API
 
 ``` 
-GET /v1/api/idioms/:name
-GET /v1/api/idioms/:id
+GET /v1/api/idioms/names/:name
+GET /v1/api/idioms/ids/:id
 GET /v1/api/idioms/samples?number=5&name=da 
 
 ```
