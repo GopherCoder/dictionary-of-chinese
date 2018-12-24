@@ -30,9 +30,9 @@ func GetProverbAtRandomHandler(context *gin.Context) {
 		ResponseProverb(context, http.StatusExpectationFailed, err.Error())
 		return
 	}
-	fmt.Println(params, "params")
+	//fmt.Println(params, "params")
 	number, _ := strconv.Atoi(params.Number)
-	fmt.Println(params, number)
+	//fmt.Println(params, number)
 	results := hashGetAllProverbAtSamples(number)
 	if results == nil {
 		ResponseProverb(context, http.StatusOK, "record not found")

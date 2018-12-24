@@ -8,7 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetIdiomsByNameHandler(context *gin.Context) {}
+func GetIdiomsByNameHandler(context *gin.Context) {
+
+}
 
 func GetIdiomsByIdHandler(context *gin.Context) {
 	var params string
