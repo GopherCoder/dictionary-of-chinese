@@ -109,6 +109,16 @@ GET /v1/api/idioms/samples?number=5&name=da
 - idiom:count
 
 
+### 5. 其他版本
+
+> Python  版
+
+[Python版](https://github.com/pwxcoo/chinese-xinhua)
+
+### 6. License
+MIT ©xieWei
+
+
 
 
 
