@@ -52,6 +52,7 @@ func fetchPerPage(page int) (model.Words, error) {
 	return commonHandler(responseString), nil
 }
 
+// fixme can not work
 func commonHandler(response string) model.Words {
 	responseString := strings.NewReader(response)
 	doc, _ := goquery.NewDocumentFromReader(responseString)
@@ -59,8 +60,10 @@ func commonHandler(response string) model.Words {
 
 	//body > div:nth-child(2) > center > table > tbody > tr > td:nth-child(1) > a:nth-child(5)
 	if wordGlobalParams.totalPage == 0 {
-		endPage := doc.Find("body > div:nth-child(2) > center > table > tbody > tr > td:nth-child(1) > a:nth-child(3)")
-		fmt.Println(endPage.Text())
+		doc.Find("body div").Eq(1).Find("center table tbody tr td a").Each(func(i int, selection *goquery.Selection) {
+			fmt.Println(selection.Text())
+		})
+		//fmt.Println(endPage)
 		//wordGlobalParams.totalPage, _ = strconv.Atoi(endPage)
 	}
 	// body > div:nth-child(3) > center > table > tbody > tr:nth-child(2)
