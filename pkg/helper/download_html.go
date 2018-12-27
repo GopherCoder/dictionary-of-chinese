@@ -1,10 +1,17 @@
 package helper
 
 import (
+	"bufio"
+	"fmt"
+	"io"
 	"io/ioutil"
+
+	"golang.org/x/net/html/charset"
+	"golang.org/x/text/encoding"
 
 	"github.com/parnurzeal/gorequest"
 	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
 )
 
@@ -18,8 +25,18 @@ func DownloadHtml(url string, args ...interface{}) ([]byte, error) {
 		return ioutil.ReadAll(utf8Content)
 
 	} else {
-		return ioutil.ReadAll(resp.Body)
-		//utf8Content := transform.NewReader(resp.Body, simplifiedchinese.HZGB2312.NewDecoder())
-		//return ioutil.ReadAll(utf8Content)
+		e := determineCharset(resp.Body)
+		utf8Content := transform.NewReader(resp.Body, e.NewDecoder())
+		return ioutil.ReadAll(utf8Content)
 	}
+}
+
+func determineCharset(i io.Reader) encoding.Encoding {
+	resp, err := bufio.NewReader(i).Peek(1024)
+	if err != nil {
+		return unicode.UTF8
+	}
+	e, _, _ := charset.DetermineEncoding(resp, "")
+	fmt.Println(e)
+	return e
 }
