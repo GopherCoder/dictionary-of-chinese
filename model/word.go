@@ -1,7 +1,7 @@
 package model
 
 type Word struct {
-	ID      string `json:"id"`
+	ID      int    `json:"id"`
 	Name    string `json:"name"`
 	Explain string `json:"explain"`
 }

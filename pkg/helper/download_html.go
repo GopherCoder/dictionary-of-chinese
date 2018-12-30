@@ -2,7 +2,6 @@ package helper
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -37,6 +36,6 @@ func determineCharset(i io.Reader) encoding.Encoding {
 		return unicode.UTF8
 	}
 	e, _, _ := charset.DetermineEncoding(resp, "")
-	fmt.Println(e)
+	//fmt.Println(e)
 	return e
 }

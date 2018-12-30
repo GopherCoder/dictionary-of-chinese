@@ -21,3 +21,13 @@ func TestFetchFetchTotalPage(tests *testing.T) {
 		fmt.Println(wordGlobalParams.totalPage)
 	})
 }
+
+func TestDivNumber(tests *testing.T) {
+	Convey("div 5000", tests, func() {
+		fmt.Println(divNumber(1))     // 0
+		fmt.Println(divNumber(100))   // 0
+		fmt.Println(divNumber(5001))  // 1
+		fmt.Println(divNumber(10003)) // 2
+		fmt.Println(divNumber(4999))  // 0
+	})
+}
