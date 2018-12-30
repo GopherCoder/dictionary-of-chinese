@@ -22,6 +22,13 @@ func TestFetchFetchTotalPage(tests *testing.T) {
 	})
 }
 
+func TestFetchFetchPerPage(tests *testing.T) {
+	Convey("fetch every page ", tests, func() {
+		fmt.Println(fetchPerPage(2))
+		fmt.Println(wordGlobalParams.totalPage)
+	})
+}
+
 func TestDivNumber(tests *testing.T) {
 	Convey("div 5000", tests, func() {
 		fmt.Println(divNumber(1))     // 0

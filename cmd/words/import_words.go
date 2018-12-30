@@ -14,17 +14,23 @@ import (
 )
 
 func Start() {
+	db.Start()
+	fmt.Println(redis.Bool(db.DB.Do("EXISTS", "proverb:ids")))
 	results, err := fetchTotalPage()
 	if err != nil {
 		return
 	}
 	importOneWordHash(results)
 	for p := 2; p <= wordGlobalParams.totalPage; p++ {
+		fmt.Println("Page:", p)
 		results, err := fetchPerPage(p)
 		if err != nil {
 			return
 		}
 		importOneWordHash(results)
+	}
+	if _, err := importNumber(wordGlobalParams.wordCount); err != nil {
+		return
 	}
 }
 
@@ -97,7 +103,7 @@ func commonHandler(response string) model.Words {
 		one.Explain = childrenExplain
 		results = append(results, one)
 		wordGlobalParams.wordCount += 1
-		fmt.Println(one)
+		//fmt.Println(one)
 	})
 	return results
 }
@@ -127,14 +133,18 @@ hash:word:number key: id, value: name~explain
 */
 
 func importOneWordHash(words model.Words) bool {
-	var values struct {
-		ID    int
-		Value string
+	var hashValue struct {
+		ID    int    `json:"id"`
+		Value string `json:"value"`
 	}
 	for _, word := range words {
-		values.ID = wordGlobalParams.wordCount
-		values.Value = fmt.Sprintf(word.Name + "~" + word.Explain)
-		if _, err := db.DB.Do("HMSET", redis.Args{}.Add(fmt.Sprintf(wordGlobalParams.wordHash+"%d", divNumber(wordGlobalParams.wordCount))).AddFlat(&word)...); err != nil {
+		hashValue.ID = word.ID
+		hashValue.Value = fmt.Sprintf(word.Name + "~" + word.Explain)
+		fmt.Println(hashValue, fmt.Sprintf(wordGlobalParams.wordHash+"%d", word.ID))
+		if response, err := db.DB.Do("HMSET", redis.Args{}.Add(fmt.Sprintf(wordGlobalParams.wordHash+"%d", word.ID)).AddFlat(&hashValue)...); err == nil {
+			fmt.Println("result:", response)
+			//return false
+		} else {
 			return false
 		}
 	}
@@ -146,4 +156,8 @@ func divNumber(number int) int {
 		return 0
 	}
 	return number / 5000
+}
+
+func importNumber(number int) (bool, error) {
+	return redis.Bool(db.DB.Do("SET", wordGlobalParams.wordCount, number))
 }
