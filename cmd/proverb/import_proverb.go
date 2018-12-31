@@ -33,8 +33,20 @@ func init() {
 
 func Start() {
 	db.Start()
-	fetchDataRootPage()
-	fetchDataPerPage()
+	var results = make(chan model.Proverbs)
+	go func() {
+		results <- fetchDataRootPage()
+	}()
+	successImportHashPage(<-results)
+
+	var resultss = make(chan model.Proverbs)
+	for p := 2; p < proverbParams.TotalPage; p++ {
+		fmt.Println(p, "page")
+		go func(p int) {
+			resultss <- fetchDataPerPage(p)
+		}(p)
+		successImportHashPage(<-resultss)
+	}
 	defer db.DB.Close()
 }
 
@@ -64,31 +76,23 @@ func attainTotalPages() string {
 }
 
 // 导入数据: page one
-func fetchDataRootPage() bool {
+func fetchDataRootPage() model.Proverbs {
 	response := attainTotalPages()
-	var results []model.Proverb
-	if results = commonFetch(response); results == nil {
-		return false
-	}
+	results := commonFetch(response)
+	return results
 
 	//fmt.Println(results)
 	// proverb:ids : string , incr
 	// proverb:hash HMSET
-	successImportHashPage(results)
-	return true
 }
 
 // page: per page except one
-func fetchDataPerPage() bool {
-	for p := 2; p <= proverbParams.TotalPage; p++ {
-		url := urlFormat(p)
-		response, _ := helper.DownloadHtml(url)
-		responseString := string([]byte(response))
-		results := commonFetch(responseString)
-		//fmt.Println(results)
-		successImportHashPage(results)
-	}
-	return true
+func fetchDataPerPage(p int) model.Proverbs {
+	url := urlFormat(p)
+	response, _ := helper.DownloadHtml(url)
+	responseString := string([]byte(response))
+	results := commonFetch(responseString)
+	return results
 }
 
 // parse html data
@@ -104,6 +108,7 @@ func commonFetch(response string) model.Proverbs {
 			var one model.Proverb
 			one.Riddle = strings.TrimSpace(riddle.Text())
 			one.Answer = strings.TrimSpace(answer.Text())
+			fmt.Println(one)
 			result = append(result, one)
 		}
 	})

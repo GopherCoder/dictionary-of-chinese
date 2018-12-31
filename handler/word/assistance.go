@@ -15,13 +15,15 @@ import (
 )
 
 var wordGlobalParams struct {
-	wordIDs  string
-	wordHash string
+	wordIDs   string
+	wordHash  string
+	wordZsort string
 }
 
 func init() {
 	wordGlobalParams.wordIDs = "word:ids"
 	wordGlobalParams.wordHash = "word:hash:"
+	wordGlobalParams.wordZsort = "word:zsort"
 }
 
 func ResponseWord(context *gin.Context, code int, value interface{}) {
@@ -68,4 +70,12 @@ func randSampleNumber() string {
 		return "-1"
 	}
 	return hashFormat(strconv.Itoa(randNumber))
+}
+
+func zaddSort(result *model.Word) bool {
+	if number, _ := redis.Int(db.DB.Do("ZINCRBY", wordGlobalParams.wordZsort, 1, result.ID)); number == 0 {
+		return false
+	}
+	return true
+
 }

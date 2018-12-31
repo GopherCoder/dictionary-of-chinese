@@ -14,13 +14,15 @@ import (
 )
 
 var proverbGlobalParams struct {
-	Ids         string
-	ProverbHash string
+	Ids          string
+	ProverbHash  string
+	ProverbZsort string
 }
 
 func init() {
 	proverbGlobalParams.Ids = "proverb:ids"
 	proverbGlobalParams.ProverbHash = "proverb:hash"
+	proverbGlobalParams.ProverbZsort = "proverb:zsort"
 }
 
 func isSuitableId(id int) bool {
@@ -94,4 +96,11 @@ func hashGetAllProverbAtSamples(number int) model.Proverbs {
 		results = append(results, *one)
 	}
 	return results
+}
+
+func zaddSort(result *model.Proverb) bool {
+	if number, _ := redis.Int(db.DB.Do("ZINCRBY", proverbGlobalParams.ProverbZsort, 1, result.ID)); number == 0 {
+		return false
+	}
+	return true
 }

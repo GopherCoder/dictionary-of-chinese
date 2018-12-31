@@ -1,9 +1,13 @@
 package proverb
 
 import (
+	"dictionary-of-chinese/model"
+	"dictionary-of-chinese/pkg/db"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/garyburd/redigo/redis"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +24,12 @@ func GetProverbByIdHandler(context *gin.Context) {
 		return
 	}
 	fullKey := consistKey(params)
-	ResponseProverb(context, http.StatusOK, hashGetAllProverbByKey(fullKey))
+	result := hashGetAllProverbByKey(fullKey)
+	if !zaddSort(result) {
+		ResponseProverb(context, http.StatusBadRequest, "zsort fail")
+		return
+	}
+	ResponseProverb(context, http.StatusOK, result)
 
 }
 
@@ -37,6 +46,30 @@ func GetProverbAtRandomHandler(context *gin.Context) {
 	if results == nil {
 		ResponseProverb(context, http.StatusOK, "record not found")
 		return
+	}
+	ResponseProverb(context, http.StatusOK, results)
+}
+
+func GetRankProverbHandler(context *gin.Context) {
+	// step one is key exists or not
+	// step two range zsort
+
+	if ok, _ := redis.Bool(db.DB.Do("EXISTS", proverbGlobalParams.ProverbZsort)); !ok {
+		ResponseProverb(context, http.StatusBadRequest, "zsort fail")
+		return
+	}
+	var number int
+	number = 10
+	result, err := redis.Strings(db.DB.Do("ZREVRANGE", proverbGlobalParams.ProverbZsort, 0, number-1, "WITHSCORES"))
+	if err != nil {
+		ResponseProverb(context, http.StatusBadRequest, "zsort fail")
+		return
+	}
+	fmt.Println(result, "kjhgfdfghjk")
+	var results []*model.Proverb
+	for _, key := range result {
+		value := hashGetAllProverbByKey(fmt.Sprintf(proverbGlobalParams.ProverbHash+":%s", key))
+		results = append(results, value)
 	}
 	ResponseProverb(context, http.StatusOK, results)
 }

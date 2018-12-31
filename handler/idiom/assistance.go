@@ -14,13 +14,15 @@ import (
 )
 
 var idiomGlobalParam struct {
-	key string
-	ids string
+	key   string
+	ids   string
+	zsort string
 }
 
 func init() {
 	idiomGlobalParam.key = "idiom:hash"
 	idiomGlobalParam.ids = "idiom:ids"
+	idiomGlobalParam.zsort = "idiom:zsort"
 }
 
 func ResponseIdiom(context *gin.Context, code int, response interface{}) {
@@ -88,4 +90,11 @@ func totalNumber() int {
 		return -1
 	}
 	return totalNumber
+}
+
+func zaddOneRecord(values *model.Idiom) bool {
+	if ok, _ := redis.Int(db.DB.Do("ZINCRBY", idiomGlobalParam.zsort, 1, values.ID)); ok == 0 {
+		return false
+	}
+	return true
 }

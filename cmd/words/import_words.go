@@ -16,19 +16,31 @@ import (
 func Start() {
 	db.Start()
 	fmt.Println(redis.Bool(db.DB.Do("EXISTS", "proverb:ids")))
-	results, err := fetchTotalPage()
-	if err != nil {
-		return
-	}
-	importOneWordHash(results)
-	for p := 2; p <= wordGlobalParams.totalPage; p++ {
-		fmt.Println("Page:", p)
-		results, err := fetchPerPage(p)
+	var results = make(chan model.Words)
+	go func() {
+		result, err := fetchTotalPage()
 		if err != nil {
 			return
 		}
-		importOneWordHash(results)
+		results <- result
+
+	}()
+	importOneWordHash(results)
+	// todo: goroutine
+
+	var resultsAll = make(chan model.Words)
+	for p := 2; p <= wordGlobalParams.totalPage; p++ {
+		fmt.Println("Page:", p)
+		go func(p int) {
+			results, err := fetchPerPage(p)
+			if err != nil {
+				return
+			}
+			resultsAll <- results
+		}(p)
+		importOneWordHash(resultsAll)
 	}
+
 	if _, err := importNumber(wordGlobalParams.wordCount); err != nil {
 		return
 	}
@@ -69,7 +81,8 @@ func fetchTotalPage() (model.Words, error) {
 	}
 	responseString := string(response)
 	//fmt.Println(responseString)
-	return commonHandler(responseString), nil
+	result := commonHandler(responseString)
+	return result, nil
 
 }
 
@@ -79,7 +92,8 @@ func fetchPerPage(page int) (model.Words, error) {
 	url := fmt.Sprintf(wordGlobalParams.formatURL, page)
 	response, _ := helper.DownloadHtml(url, ok)
 	responseString := string([]byte(response))
-	return commonHandler(responseString), nil
+	words := commonHandler(responseString)
+	return words, nil
 }
 
 // fixme : fixed
@@ -103,7 +117,7 @@ func commonHandler(response string) model.Words {
 		one.Explain = childrenExplain
 		results = append(results, one)
 		wordGlobalParams.wordCount += 1
-		//fmt.Println(one)
+		fmt.Println(one)
 	})
 	return results
 }
@@ -132,12 +146,13 @@ hash:word:number key: id, value: name~explain
 
 */
 
-func importOneWordHash(words model.Words) bool {
+func importOneWordHash(words chan model.Words) bool {
 	var hashValue struct {
 		ID    int    `json:"id"`
 		Value string `json:"value"`
 	}
-	for _, word := range words {
+
+	for _, word := range <-words {
 		hashValue.ID = word.ID
 		hashValue.Value = fmt.Sprintf(word.Name + "~" + word.Explain)
 		fmt.Println(hashValue, fmt.Sprintf(wordGlobalParams.wordHash+"%d", word.ID))
@@ -159,5 +174,5 @@ func divNumber(number int) int {
 }
 
 func importNumber(number int) (bool, error) {
-	return redis.Bool(db.DB.Do("SET", wordGlobalParams.wordCount, number))
+	return redis.Bool(db.DB.Do("SET", wordGlobalParams.wordIds, number))
 }

@@ -1,9 +1,13 @@
 package idiom
 
 import (
+	"dictionary-of-chinese/model"
+	"dictionary-of-chinese/pkg/db"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/garyburd/redigo/redis"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,6 +35,10 @@ func GetIdiomsByIdHandler(context *gin.Context) {
 	}
 	result := hashGetAllByKey(key)
 	//fmt.Println(result, "result")
+	if !zaddOneRecord(result) {
+		ResponseIdiom(context, http.StatusBadRequest, "zincrby fail")
+		return
+	}
 	ResponseIdiom(context, http.StatusOK, result)
 }
 
@@ -45,4 +53,28 @@ func GetIdiomsAtRandomHandler(context *gin.Context) {
 	number, _ := strconv.Atoi(params.Number)
 	ResponseIdiom(context, http.StatusOK, numberHashGetAll(number))
 
+}
+
+func GetIdiomsRankHandler(context *gin.Context) {
+	// 根据搜索的 id, 维护一个固定长度的 zset
+	// step one : sorted set exists or not
+	// step two : sorted set range by score
+
+	if ok, _ := redis.Bool(db.DB.Do("EXISTS", idiomGlobalParam.zsort)); !ok {
+		ResponseIdiom(context, http.StatusBadRequest, "not exists rank")
+		return
+	}
+	var rankNumber int
+	rankNumber = 10
+	result, err := redis.Strings(db.DB.Do("ZREVRANGE", idiomGlobalParam.zsort, 0, rankNumber-1, "WITHSCORES"))
+	if err != nil {
+		ResponseIdiom(context, http.StatusBadRequest, err)
+		return
+	}
+	var results []*model.Idiom
+	for _, key := range result {
+		values := hashGetAllByKey(fmt.Sprintf(idiomGlobalParam.key+":%s", key))
+		results = append(results, values)
+	}
+	ResponseIdiom(context, http.StatusOK, &results)
 }
