@@ -5,10 +5,8 @@ import (
 	"dictionary-of-chinese/pkg/db"
 	"dictionary-of-chinese/pkg/helper"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -47,9 +45,28 @@ func init() {
 
 func Start() {
 	db.Start()
-	fetchDataFirstPage()
-	fetchDataPerPage()
+	var c = make(chan<- model.Idioms)
+	for i := 0; i < 100; i++ {
+		c = createWorker(i)
+	}
+	fetchDataFirstPage(c)
+	fetchDataPerPage(c)
 	defer db.DB.Close()
+}
+
+func createWorker(id int) chan<- model.Idioms {
+	var c = make(chan model.Idioms)
+	go func() {
+		for {
+			results := <-c
+			fmt.Println(id, results)
+			if !successImportIdiomsHashPage(results) {
+				fmt.Println("Hello world, game fail")
+				continue
+			}
+		}
+	}()
+	return c
 }
 
 func urlFormat(page int) string {
@@ -73,39 +90,21 @@ func attainTotalPage() (int, string) {
 	return totalPageInt, responseString
 }
 
-func fetchDataFirstPage() {
+func fetchDataFirstPage(c chan<- model.Idioms) {
 	total, response := attainTotalPage()
 	idiomsParams.TotalPage = total
-	fmt.Println(total)
+	//fmt.Println(total)
 	results := commonFetch(response)
-	if !successImportIdiomsHashPage(results) {
-		fmt.Println("1234")
-		return
-	}
-
+	c <- results
 }
 
-var g = func(p int, c chan model.Idioms) {
-	url := urlFormat(p)
-	response, _ := helper.DownloadHtml(url)
-	responseString := string([]byte(response))
-	result := commonFetch(responseString)
-	c <- result
-}
-
-func fetchDataPerPage() {
-	rand.Seed(time.Now().Unix())
-	// 	time.Sleep(5 * time.Second)
-	var c = make(chan model.Idioms)
+func fetchDataPerPage(c chan<- model.Idioms) {
 	for p := 2; p <= idiomsParams.TotalPage; p++ {
-		go g(p, c)
-		time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
-		results := <-c
-		//fmt.Println(results)
-		if !successImportIdiomsHashPage(results) {
-			fmt.Println(76545678)
-			return
-		}
+		url := urlFormat(p)
+		response, _ := helper.DownloadHtml(url)
+		responseString := string([]byte(response))
+		result := commonFetch(responseString)
+		c <- result
 	}
 
 }
@@ -119,7 +118,7 @@ func commonFetch(response string) model.Idioms {
 			selection.Find("td > a").Each(func(i int, selection *goquery.Selection) {
 				url, _ := selection.Attr("href")
 				idiom := strings.TrimSpace(selection.Text())
-				fmt.Println(url, idiom)
+				//fmt.Println(url, idiom)
 				var one model.Idiom
 				one.Name = idiom
 				fetchExplain(urlConsist(url), &one)

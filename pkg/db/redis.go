@@ -12,7 +12,7 @@ var DB redis.Conn
 func initRedis() {
 	port := viper.GetString("redis.port")
 	fmt.Println(port)
-	con, err := redis.Dial("tcp", fmt.Sprintf(":%s", "6379"))
+	con, err := redis.Dial("tcp", fmt.Sprintf(":%s", "6377"))
 	if err != nil {
 		panic("can not connect to redis")
 	}
