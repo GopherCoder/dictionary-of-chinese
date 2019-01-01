@@ -60,12 +60,11 @@ func GetRankProverbHandler(context *gin.Context) {
 	}
 	var number int
 	number = 10
-	result, err := redis.Strings(db.DB.Do("ZREVRANGE", proverbGlobalParams.ProverbZsort, 0, number-1, "WITHSCORES"))
+	result, err := redis.Strings(db.DB.Do("ZREVRANGE", proverbGlobalParams.ProverbZsort, 0, number-1))
 	if err != nil {
 		ResponseProverb(context, http.StatusBadRequest, "zsort fail")
 		return
 	}
-	fmt.Println(result, "kjhgfdfghjk")
 	var results []*model.Proverb
 	for _, key := range result {
 		value := hashGetAllProverbByKey(fmt.Sprintf(proverbGlobalParams.ProverbHash+":%s", key))

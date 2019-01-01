@@ -66,7 +66,7 @@ func GetIdiomsRankHandler(context *gin.Context) {
 	}
 	var rankNumber int
 	rankNumber = 10
-	result, err := redis.Strings(db.DB.Do("ZREVRANGE", idiomGlobalParam.zsort, 0, rankNumber-1, "WITHSCORES"))
+	result, err := redis.Strings(db.DB.Do("ZREVRANGE", idiomGlobalParam.zsort, 0, rankNumber-1))
 	if err != nil {
 		ResponseIdiom(context, http.StatusBadRequest, err)
 		return
