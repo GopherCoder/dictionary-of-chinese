@@ -2,6 +2,7 @@ package helper
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -19,6 +20,7 @@ func DownloadHtml(url string, args ...interface{}) ([]byte, error) {
 	resp, _, _ := request.Get(url).
 		Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36").
 		End()
+	fmt.Println(resp.StatusCode)
 	if len(args) == 0 {
 		utf8Content := transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder())
 		return ioutil.ReadAll(utf8Content)
