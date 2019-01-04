@@ -1,6 +1,6 @@
 新华字典 API(Redis 版)
 使用 Redis 构建 API
-24 Dec 2018
+03 Jan 2019
 
 XieWei
 Email:
@@ -14,10 +14,21 @@ https://www.zhihu.com/people/wu-xiao-shen-16/activities
 
 * 需求分析
 
+整体流程
+
+ 1. 已有项目
+ 2. 数据获取
+ 3. 编码实现
+
 
 * 第二章
 
 * 设计
+
+整体流程
+
+    1. 数据库设计
+    2. 编码的实现
 
 * 第三章
 
